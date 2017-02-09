@@ -30,8 +30,8 @@
   "homepage": "https://github.com/petamoriken/pxtnDecoder#readme",
   "keywords": [
     "PxtoneCollage",
+    "pxtone-collage",
     "WebAudioAPI",
-    "streams",
     "web-audio-api",
     "webaudio"
   ],
