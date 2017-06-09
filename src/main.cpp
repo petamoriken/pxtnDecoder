@@ -3,6 +3,8 @@
 #include <pxtnService.h>
 #include <pxtnError.h>
 
+extern "C" {
+
 void consoleError(const char *offset, size_t length);
 
 static void printError(pxtnERR pxtn_err) {
@@ -72,4 +74,6 @@ const char* service_getComment(pxtnService* pxtn) {
 
 void service_delete(pxtnService *pxtn) {
     SAFE_DELETE(pxtn);
+}
+
 }
