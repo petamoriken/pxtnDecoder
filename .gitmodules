@@ -1,0 +1,12 @@
+[submodule "third_party/vorbis"]
+	path = third_party/vorbis
+	url = https://github.com/xiph/vorbis
+	ignore = dirty
+[submodule "third_party/ogg"]
+	path = third_party/ogg
+	url = https://github.com/xiph/ogg
+	ignore = dirty
+[submodule "third_party/stdlib"]
+	path = third_party/stdlib
+	url = https://github.com/guybedford/wasm-stdlib-hack
+	ignore = dirty

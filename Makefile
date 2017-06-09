@@ -1,37 +1,20 @@
-PXTONE_DIR:=pxtone_source
-EMCC_DIR:=emscripten_source
+INCLUDES := -Ithird_party/stdlib/include/libc -Ithird_party/stdlib/include/libcxx -Ithird_party/ogg/include -Ithird_party/vorbis/include -Ithird_party/vorbis/lib -Ithird_party/pxtone
+DISABLE_WARN := -Wno-switch -Wno-unused-value -Wno-bitwise-op-parentheses -Wno-shift-op-parentheses
 
-CLANG_OPTS:=-std=c++11 -Wno-unused-value -Wno-switch -Wno-parentheses
-
-EMCC_OPTS:=--bind -s EXPORTED_RUNTIME_METHODS="['getValue']"
-EMCC_OPTS+=-s DISABLE_EXCEPTION_CATCHING=1 -s NO_EXIT_RUNTIME=1 -s NO_FILESYSTEM=1
-EMCC_OPTS+=-s TOTAL_MEMORY=16777216
-EMCC_OPTS+=-Oz --memory-init-file 0 --closure 1
-EMCC_OPTS+=--pre-js $(EMCC_DIR)/pre.js --post-js $(EMCC_DIR)/post.js
-
-EMCC_LINKS:=-I $(PXTONE_DIR)/src-oggvorbis -I $(PXTONE_DIR)/src-pxtone -I $(PXTONE_DIR)/src-pxtonePlay -I $(PXTONE_DIR)/src-pxwr
-
-EMCC_SRCS:=-x c $(wildcard $(PXTONE_DIR)/src-oggvorbis/*.c) $(PXTONE_DIR)/src-oggvorbis/.libs/libvorbis.a
-EMCC_SRCS+=-x c++ $(EMCC_DIR)/bind.cpp $(wildcard $(PXTONE_DIR)/src-pxtone/*.cpp) $(wildcard $(PXTONE_DIR)/src-pxtonePlay/*.cpp) $(wildcard $(PXTONE_DIR)/src-pxwr/*.cpp)
+PXTONE_SRC := $(wildcard third_party/pxtone/*.cpp)
+OGG_SRC := $(addprefix third_party/ogg/src/, bitwise.c framing.c)
+VORVIS_SRC := $(addprefix third_party/vorbis/lib/, analysis.c bitrate.c block.c codebook.c envelope.c floor0.c floor1.c info.c lookup.c lpc.c lsp.c mapping0.c mdct.c psy.c registry.c res0.c sharedbook.c smallft.c synthesis.c vorbisenc.c vorbisfile.c window.c)
 
 
-all: lib/* build/pxtnDecoder.min.js
+lib/main.ll: third_party/ogg/include/ogg/config_types.h
+	mkdir -p lib
+	clang++ -S --target=wasm32 $(INCLUDES) -Oz -c src/main.cpp -o lib/main.ll
+	$(foreach src, $(OGG_SRC), clang -S --target=wasm32 $(INCLUDES) $(DISABLE_WARN) -Oz -c $(src) -o lib/$(basename $(notdir $(src))).ll;)
+	$(foreach src, $(VORVIS_SRC), clang -S --target=wasm32 $(INCLUDES) $(DISABLE_WARN) -Oz -c $(src) -o lib/$(basename $(notdir $(src))).ll;)
+	$(foreach src, $(PXTONE_SRC), clang++ -S --target=wasm32 $(INCLUDES) $(DISABLE_WARN) -Oz -c $(src) -o lib/$(basename $(notdir $(src))).ll;)
 
-build/pxtnDecoder.min.js: build/pxtnDecoder.js
-	uglifyjs build/pxtnDecoder.js -c --comments "/pxtnDecoder/" -o build/pxtnDecoder.min.js 
-
-build/pxtnDecoder.js: src/* src/emDecoder.js
-	mkdir -p build temp && \
-	browserify -t babelify src/index.js --no-commondir --igv global -i text-encoding -o temp/pxtnDecoder.js && \
-	echo "/*! pxtnDecoder" v`node -pe "require('./package.json').version"` "http://git.io/pxtnDecoder */" | cat - temp/pxtnDecoder.js > build/pxtnDecoder.js && \
-	$(RM) -rf temp
-
-lib/*: src/* src/emDecoder.js
-	babel src --ignore "emDecoder.js" -d lib && \
-	cp src/emDecoder.js lib/emDecoder.js
-
-src/emDecoder.js: $(PXTONE_DIR)/src-pxtone/* $(PXTONE_DIR)/src-pxtonePlay/* $(PXTONE_DIR)/src-pxwr/* $(EMCC_DIR)/*
-	em++ $(CLANG_OPTS) $(EMCC_OPTS) $(EMCC_LINKS) $(EMCC_SRCS) -o src/emDecoder.js
+third_party/ogg/include/ogg/config_types.h:
+	cd third_party/ogg && ./autogen.sh && ./configure
 
 clean:
-	$(RM) -rf build lib temp src/emDecoder.js
+	rm -rf lib
