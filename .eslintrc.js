@@ -8,6 +8,9 @@ module.exports = {
     "es6": true,
     "mocha": true
   },
+  globals: {
+    "WebAssembly": false
+  },
   rules: {
     "quotes": [2, "double", "avoid-escape"],
     "no-console": [0],

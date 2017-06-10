@@ -1,4 +1,5 @@
-#include <string.h>
+#include <cstddef>
+#include <string>
 
 #include <pxtnService.h>
 #include <pxtnError.h>
@@ -15,7 +16,7 @@ static void printError(pxtnERR pxtn_err) {
 }
 
 pxtnService* service_create(int32_t channel, int32_t sample_per_second) {
-    pxtnService* pxtn = NULL;
+    pxtnService* pxtn = nullptr;
     pxtnERR pxtn_err = pxtnERR_VOID;
 
     pxtn = new pxtnService();
@@ -30,7 +31,7 @@ End:
     if(pxtn_err != pxtnOK) {
         printError(pxtn_err);
         SAFE_DELETE(pxtn);
-        return NULL;
+        return nullptr;
     }
 
     return pxtn;
@@ -65,11 +66,11 @@ End:
 }
 
 const char* service_getName(pxtnService* pxtn) {
-    return pxtn->text->get_name_buf(NULL);
+    return pxtn->text->get_name_buf(nullptr);
 }
 
 const char* service_getComment(pxtnService* pxtn) {
-    return pxtn->text->get_comment_buf(NULL);
+    return pxtn->text->get_comment_buf(nullptr);
 }
 
 void service_delete(pxtnService *pxtn) {
