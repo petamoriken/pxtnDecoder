@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <title>Document</title>
+</head><body><script>
+
+"use strict";
+
+(async () => {
+
+    const { memory, imports, exports, table } = await (async() => {
+        const buffer = await fetch("../third_party/stdlib/dist/memory.wasm").then(body => body.arrayBuffer());
+        const module = await WebAssembly.compile(buffer);
+
+        const memory = new WebAssembly.Memory({
+            initial: 1
+        });
+
+        const table = new WebAssembly.Table({ 
+            initial: 0,
+            element: "anyfunc"
+        });
+
+        const imports = {
+            env: { memory, table }
+        };
+
+        const instance = await WebAssembly.instantiate(module, imports);
+        const exports = instance.exports;
+
+        return { memory, imports, exports, table };
+    })();
+
+    Object.assign(window, { memory, imports, exports, table });
+
+    // debug
+    const list = window.list = (() => {
+        const ret = [];
+        for(const [key, {name}] of Object.entries(exports)) {
+            ret[name] = key;
+        }
+        return ret;
+    })();
+
+})();
+
+</script></body></html>

@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <title>Document</title>
+</head><body><script>
+
+"use strict";
+
+(async () => {
+
+    const fetchPxtn = fetch("sample.ptcop").then(body => body.ok ? body.arrayBuffer() : null);
+
+    const { memory, imports, exports, table } = await (async() => {
+        const buffer = await fetch("../build/pxtn.wasm").then(body => body.ok ? body.arrayBuffer() : null);
+        const module = await WebAssembly.compile(buffer);
+
+        const memory = new WebAssembly.Memory({
+            initial: 10
+        });
+
+        const table = new WebAssembly.Table({ 
+            initial: 0,
+            element: "anyfunc"
+        });
+
+        const imports = {
+
+            env: {
+
+                memory,
+                table,
+
+                consoleError(offset, length) {
+                    const buffer = new Uint8Array(memory.buffer, offset, length);
+                    console.log(new TextDecoder().decode(buffer));
+                },
+
+                consoleNum(num) {
+                    console.log("malloc:", num);
+                },
+
+                sbrk(num) {
+                    console.log("sbrk:", num);
+                    num = Math.ceil(num / 64 / 1024);
+                    console.log("memory glow:", num);
+                    return memory.grow(num);
+                },
+
+                abort() {
+                    console.log("abort");
+                },
+
+                exit() {
+                    console.log("exit");
+                },
+
+                _ZSt9terminatev() {
+                    console.log("terminate");
+                },
+
+                _ZTISt9bad_alloc: 0,
+
+                __cxa_begin_catch(num) {
+                    console.log("begin catch:", num);
+                    return 0;
+                },
+
+                __errno_location() {
+                    console.log("errno location");
+                    return 8;
+                },
+
+                __lock(num) {
+                    console.log("lock:", num);
+                },
+
+                __lockfile(num) {
+                    console.log("lockfile:", num);
+                    return 1;
+                },
+
+                __unlock(num) {
+                    console.log("unlock:", num);
+                },
+
+                __unlockfile(num) {
+                    console.log("unlockfile:", num);
+                },
+
+                fopen() {
+                    console.log("fopen");
+                    return 0;
+                },
+
+                fclose() {
+                    console.log("fclose");
+                    return 0;
+                },
+
+                abs: Math.abs,
+                labs: Math.abs,
+                acos: Math.acos,
+                atan: Math.atan,
+                sin: Math.sin,
+                cos: Math.cos,
+                exp: Math.exp,
+                log: Math.log,
+                pow: Math.pow,
+
+                strcpy(target, start) {
+                    console.log("strcpy");
+
+                    const buffer = new Uint8Array(memory.buffer);
+
+                    let end = start;
+                    for(;;) {
+                        if(buffer[end++] === 0) {
+                            break;
+                        }
+                    }
+
+                    buffer.copyWithin(target, start, end);
+                },
+
+                sprintf() {
+                    console.log("sprintf");
+                }
+            }
+        };
+
+        const instance = await WebAssembly.instantiate(module, imports);
+        const exports = instance.exports;
+
+        return { memory, imports, exports, table };
+    })();
+
+    Object.assign(window, { memory, imports, exports, table });
+
+    // debug
+    const list = window.list = (() => {
+        const ret = [];
+        for(const [key, {name}] of Object.entries(exports)) {
+            ret[name] = key;
+        }
+        return ret;
+    })();
+
+    const buffer = memory.buffer;
+    const pxtn = await fetchPxtn;
+
+    console.log(exports);
+
+    const service_ptr = exports.service_create(2, 44100);
+
+    /*
+    const pxtn_length = pxtn.length;
+    const pxtn_ptr = exports.malloc(pxtn_length);
+
+    // memcpy
+    new Uint8Array(buffer).set(new Uint8Array(pxtn), pxtn_ptr);
+
+    exports.service_load(service, pxtn_buffer, pxtn_length);
+
+    // text decoder
+    const textDecoder = new TextDecoder("shift_jis");
+
+    // name
+    const name_ptr = exports.service_getName(service_ptr);
+    const name_length = exports.strlen(name_ptr);
+    console.log("name: ", textDecoder.decode(buffer.slice(name_ptr, name_ptr + name_length)));
+    */
+})();
+
+</script></body></html>
