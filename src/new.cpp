@@ -3,9 +3,7 @@
 
 #define Error "operator new error"
 
-extern "C" {
-    void consoleError(const char* offset, size_t length);
-}
+extern "C" void consoleError(const char* offset, size_t length);
 
 void* operator new (size_t size) throw(std::bad_alloc) {
     if(size == 0)

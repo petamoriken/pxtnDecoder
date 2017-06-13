@@ -6,7 +6,7 @@
 
 extern "C" {
 
-void consoleError(const char *offset, size_t length);
+void consoleError(const char* offset, size_t length);
 
 static void printError(pxtnERR pxtn_err) {
     const char* err = pxtnError_get_string(pxtn_err);
@@ -15,12 +15,24 @@ static void printError(pxtnERR pxtn_err) {
     consoleError(err, length);
 }
 
+static int print(const char* str) {
+    consoleError(str, strlen(str));
+    return 1;
+}
+
 pxtnService* service_create(int32_t channel, int32_t sample_per_second) {
     pxtnService* pxtn = nullptr;
     pxtnERR pxtn_err = pxtnERR_VOID;
 
+    print("hoge");
+
     pxtn = new pxtnService();
+
+    print("fuga");
+
     pxtn_err = pxtn->init();
+
+    print("piyo");    
 
     if(pxtn_err != pxtnOK)
         goto End;
