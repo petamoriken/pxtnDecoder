@@ -6,10 +6,6 @@
   "bugs": {
     "url": "https://github.com/petamoriken/pxtnDecoder/issues"
   },
-  "devDependencies": {
-    "babel-eslint": "^7.2.3",
-    "eslint": "^3.19.0"
-  },
   "homepage": "https://github.com/petamoriken/pxtnDecoder#readme",
   "keywords": [
     "PxtoneCollage",
@@ -19,7 +15,7 @@
     "ptnoise"
   ],
   "license": "MIT",
-  "main": "index.js",
+  "main": "build/pxtnDecoder.js",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/petamoriken/pxtnDecoder.git"
